@@ -5,7 +5,7 @@ const WIDTH = 1080;
 const HEIGHT = 1350;
 const SAFE_TOP = (HEIGHT - WIDTH) / 2;
 const SITE_NAME = "bibliabendita.com";
-let wasmReadyPromise;
+let rendererAssetsPromise;
 
 const palettes = {
   aurora: [["#193847", "#9eb7a7", "#e8cfad", "#6a8278"], ["#362e4b", "#7f718c", "#d8a999", "#efe1c4"]],
@@ -87,11 +87,11 @@ function splitText(text, maxChars) {
 
 function fitText(text) {
   const candidates = [
-    { size: 72, maxChars: 26, maxLines: 5 },
-    { size: 64, maxChars: 30, maxLines: 6 },
-    { size: 56, maxChars: 34, maxLines: 7 },
-    { size: 48, maxChars: 40, maxLines: 8 },
-    { size: 40, maxChars: 48, maxLines: 9 },
+    { size: 68, maxChars: 18, maxLines: 5 },
+    { size: 60, maxChars: 22, maxLines: 6 },
+    { size: 52, maxChars: 26, maxLines: 7 },
+    { size: 46, maxChars: 31, maxLines: 8 },
+    { size: 40, maxChars: 36, maxLines: 9 },
   ];
 
   for (const candidate of candidates) {
@@ -99,7 +99,7 @@ function fitText(text) {
     if (lines.length <= candidate.maxLines) return { ...candidate, lines };
   }
 
-  return { size: 38, lines: splitText(text, 48).slice(0, 9) };
+  return { size: 36, lines: splitText(text, 42).slice(0, 9) };
 }
 
 function gradients(palette) {
@@ -292,12 +292,35 @@ function drawMotif(style, random, palette) {
 }
 
 async function ensureResvgReady() {
-  if (!wasmReadyPromise) {
-    wasmReadyPromise = readFile(
-      new URL("../node_modules/@resvg/resvg-wasm/index_bg.wasm", import.meta.url),
-    ).then((wasmBuffer) => initWasm(wasmBuffer));
+  if (!rendererAssetsPromise) {
+    rendererAssetsPromise = Promise.all([
+      readFile(new URL("../node_modules/@resvg/resvg-wasm/index_bg.wasm", import.meta.url)),
+      readFile(
+        new URL(
+          "../node_modules/dejavu-fonts-ttf/ttf/DejaVuSerif.ttf",
+          import.meta.url,
+        ),
+      ),
+      readFile(
+        new URL(
+          "../node_modules/dejavu-fonts-ttf/ttf/DejaVuSans-Bold.ttf",
+          import.meta.url,
+        ),
+      ),
+      readFile(
+        new URL(
+          "../node_modules/dejavu-fonts-ttf/ttf/DejaVuSans.ttf",
+          import.meta.url,
+        ),
+      ),
+    ]).then(async ([wasmBuffer, dejavuSerif, dejavuSansBold, dejavuSans]) => {
+      await initWasm(wasmBuffer);
+      return {
+        fontBuffers: [dejavuSerif, dejavuSansBold, dejavuSans],
+      };
+    });
   }
-  await wasmReadyPromise;
+  return rendererAssetsPromise;
 }
 
 function createSvg({ text, reference, style, seed }) {
@@ -331,17 +354,17 @@ function createSvg({ text, reference, style, seed }) {
       <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#vignette)" />
       <rect x="${panelX}" y="${panelY}" width="${panelWidth}" height="${panelHeight}" rx="36" fill="rgba(${panelRgb},${useLightText ? 0.54 : 0.72})" />
       <rect x="${panelX}" y="${panelY}" width="${panelWidth}" height="${panelHeight}" rx="36" fill="#ffffff" opacity="0.05" />
-      <text x="${textX}" y="${panelY + 68}" fill="${mutedTextColor}" font-family="Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="3">UNA PALABRA PARA HOY</text>
-      <text x="${textX}" y="${panelY + 136}" fill="${textColor}" font-family="Georgia, 'Times New Roman', serif" font-size="${fitted.size}">${messageLines}</text>
+      <text x="${textX}" y="${panelY + 68}" fill="${mutedTextColor}" font-family="'DejaVu Sans'" font-size="20" font-weight="700" letter-spacing="3">UNA PALABRA PARA HOY</text>
+      <text x="${textX}" y="${panelY + 136}" fill="${textColor}" font-family="'DejaVu Serif'" font-size="${fitted.size}">${messageLines}</text>
       <line x1="${textX}" y1="${panelY + 136 + messageHeight + 28}" x2="${textX + 52}" y2="${panelY + 136 + messageHeight + 28}" stroke="${mutedTextColor}" stroke-width="2" />
-      <text x="${textX + 72}" y="${panelY + 136 + messageHeight + 36}" fill="${textColor}" font-family="Arial, sans-serif" font-size="25" font-weight="700">${escapeXml(reference)}</text>
-      <text x="${WIDTH / 2}" y="${brandY}" text-anchor="middle" fill="${useLightText ? "#fffaf0" : "#182321"}" opacity="0.9" font-family="Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="1.5">${SITE_NAME}</text>
+      <text x="${textX + 72}" y="${panelY + 136 + messageHeight + 36}" fill="${textColor}" font-family="'DejaVu Sans'" font-size="25" font-weight="700">${escapeXml(reference)}</text>
+      <text x="${WIDTH / 2}" y="${brandY}" text-anchor="middle" fill="${useLightText ? "#fffaf0" : "#182321"}" opacity="0.9" font-family="'DejaVu Sans'" font-size="34" font-weight="700" letter-spacing="1.5">${SITE_NAME}</text>
     </svg>
   `;
 }
 
 export async function generatePostPng(options = {}) {
-  await ensureResvgReady();
+  const { fontBuffers } = await ensureResvgReady();
   const text = String(options.text || "Incluso cuando el camino no está claro, la fe nos recuerda que nunca avanzamos solos.").slice(0, 260);
   const reference = String(options.reference || "Salmos 32:8").slice(0, 80);
   const seed = String(options.seed || `${Date.now()}-${Math.random()}`);
@@ -352,7 +375,14 @@ export async function generatePostPng(options = {}) {
       mode: "width",
       value: WIDTH,
     },
-  });
+      font: {
+        fontBuffers,
+        loadSystemFonts: false,
+        defaultFontFamily: "DejaVu Sans",
+        sansSerifFamily: "DejaVu Sans",
+        serifFamily: "DejaVu Serif",
+      },
+    });
   return resvg.render().asPng();
 }
 
