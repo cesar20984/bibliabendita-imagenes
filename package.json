@@ -13,6 +13,6 @@
     "vite": "^8.0.16"
   },
   "dependencies": {
-    "sharp": "^0.35.1"
+    "@resvg/resvg-wasm": "^2.6.2"
   }
 }

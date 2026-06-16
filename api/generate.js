@@ -1,9 +1,11 @@
-import sharp from "sharp";
+import { readFile } from "node:fs/promises";
+import { Resvg, initWasm } from "@resvg/resvg-wasm";
 
 const WIDTH = 1080;
 const HEIGHT = 1350;
 const SAFE_TOP = (HEIGHT - WIDTH) / 2;
 const SITE_NAME = "bibliabendita.com";
+let wasmReadyPromise;
 
 const palettes = {
   aurora: [["#193847", "#9eb7a7", "#e8cfad", "#6a8278"], ["#362e4b", "#7f718c", "#d8a999", "#efe1c4"]],
@@ -289,6 +291,15 @@ function drawMotif(style, random, palette) {
   return (renderers[style] || renderers.aurora)();
 }
 
+async function ensureResvgReady() {
+  if (!wasmReadyPromise) {
+    wasmReadyPromise = readFile(
+      new URL("../node_modules/@resvg/resvg-wasm/index_bg.wasm", import.meta.url),
+    ).then((wasmBuffer) => initWasm(wasmBuffer));
+  }
+  await wasmReadyPromise;
+}
+
 function createSvg({ text, reference, style, seed }) {
   const styleNames = Object.keys(palettes);
   const random = createRandom(seed);
@@ -330,12 +341,19 @@ function createSvg({ text, reference, style, seed }) {
 }
 
 export async function generatePostPng(options = {}) {
+  await ensureResvgReady();
   const text = String(options.text || "Incluso cuando el camino no está claro, la fe nos recuerda que nunca avanzamos solos.").slice(0, 260);
   const reference = String(options.reference || "Salmos 32:8").slice(0, 80);
   const seed = String(options.seed || `${Date.now()}-${Math.random()}`);
   const style = options.style ? String(options.style) : undefined;
   const svg = createSvg({ text, reference, seed, style });
-  return sharp(Buffer.from(svg)).png().toBuffer();
+  const resvg = new Resvg(svg, {
+    fitTo: {
+      mode: "width",
+      value: WIDTH,
+    },
+  });
+  return resvg.render().asPng();
 }
 
 function getBody(req) {
