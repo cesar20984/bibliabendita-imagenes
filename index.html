@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Estudio de imágenes para las redes sociales de Biblia Bendita."
+    />
+    <title>Biblia Bendita | Estudio Social</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Caslon+Display&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Biblia Bendita Estudio">
+          <span class="brand-mark" aria-hidden="true">B</span>
+          <span>
+            <strong>Biblia Bendita</strong>
+            <small>Estudio social</small>
+          </span>
+        </a>
+
+        <div class="topbar-status">
+          <span class="status-dot"></span>
+          Modo de prueba
+        </div>
+      </header>
+
+      <section class="workspace">
+        <aside class="control-panel">
+          <div class="eyebrow">Composición</div>
+          <h1>Crea una pausa<br />que inspire.</h1>
+          <p class="intro">
+            Genera fondos únicos y composiciones listas para el feed de Instagram.
+          </p>
+
+          <form id="composer-form">
+            <label class="field">
+              <span>Texto de la publicación</span>
+              <textarea id="message" rows="5" maxlength="220">Incluso cuando el camino no está claro, la fe nos recuerda que nunca avanzamos solos.</textarea>
+              <small><span id="character-count">95</span>/220</small>
+            </label>
+
+            <label class="field">
+              <span>Referencia</span>
+              <input id="reference" type="text" value="Salmos 32:8" maxlength="60" />
+            </label>
+
+            <div class="automation-note">
+              <span aria-hidden="true">✦</span>
+              <p>
+                El fondo, los colores y la composición se eligen automáticamente
+                en cada generación.
+              </p>
+            </div>
+          </form>
+
+          <div class="actions">
+            <button id="generate-button" class="button button-primary" type="button">
+              <span>Generar nueva imagen</span>
+              <span aria-hidden="true">✦</span>
+            </button>
+            <button id="download-button" class="button button-secondary" type="button">
+              Descargar PNG
+            </button>
+          </div>
+        </aside>
+
+        <section class="preview-panel" aria-label="Vista previa">
+          <div class="preview-heading">
+            <div>
+              <span class="eyebrow">Vista previa</span>
+              <strong>Publicación vertical</strong>
+            </div>
+            <span class="dimensions">1080 × 1350 px</span>
+          </div>
+
+          <div class="canvas-stage">
+            <canvas id="post-canvas" width="1080" height="1350"></canvas>
+          </div>
+
+          <div class="preview-note">
+            <span class="crop-icon" aria-hidden="true"></span>
+            Preparada para el feed vertical y la cuadrícula 1:1.
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
