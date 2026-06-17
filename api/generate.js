@@ -94,6 +94,8 @@ function splitText(text, maxChars) {
 
 function fitText(text) {
   const candidates = [
+    { size: 68, maxChars: 15, maxLines: 4 },
+    { size: 62, maxChars: 16, maxLines: 5 },
     { size: 58, maxChars: 17, maxLines: 6 },
     { size: 52, maxChars: 20, maxLines: 7 },
     { size: 46, maxChars: 24, maxLines: 8 },
@@ -343,14 +345,22 @@ function createSvg({ text, reference, style, seed }) {
   const fitted = fitText(text);
   const lineHeight = fitted.size * 1.14;
   const messageHeight = fitted.lines.length * lineHeight;
-  const panelWidth = 820;
+  const isCompactMessage = fitted.lines.length <= 4;
+  const isMediumMessage = fitted.lines.length <= 6;
+  const panelWidth = isCompactMessage ? 900 : isMediumMessage ? 860 : 820;
   const panelX = (WIDTH - panelWidth) / 2;
-  const panelHeight = Math.max(450, messageHeight + 240);
+  const panelHeight = Math.max(
+    isCompactMessage ? 500 : 460,
+    messageHeight + (isCompactMessage ? 250 : 240),
+  );
   const panelY = Math.min(
-    pick(random, [SAFE_TOP + 105, SAFE_TOP + 210, SAFE_TOP + 315]),
+    pick(random, isCompactMessage ? [SAFE_TOP + 145, SAFE_TOP + 220] : [SAFE_TOP + 105, SAFE_TOP + 210, SAFE_TOP + 315]),
     SAFE_TOP + WIDTH - panelHeight - 75,
   );
-  const textX = panelX + 56;
+  const textX = panelX + (isCompactMessage ? 64 : 56);
+  const titleFontSize = isCompactMessage ? 24 : 22;
+  const titleLetterSpacing = isCompactMessage ? 2.2 : 2.5;
+  const referenceFontSize = isCompactMessage ? 30 : 28;
   const brandY = random() > 0.5 ? SAFE_TOP + 62 : SAFE_TOP + WIDTH - 54;
   const messageLines = fitted.lines
     .map((line, index) => `<tspan x="${textX}" dy="${index === 0 ? 0 : lineHeight}">${escapeXml(line)}</tspan>`)
@@ -364,10 +374,10 @@ function createSvg({ text, reference, style, seed }) {
       <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#vignette)" />
       <rect x="${panelX}" y="${panelY}" width="${panelWidth}" height="${panelHeight}" rx="36" fill="rgba(${panelRgb},${useLightText ? 0.54 : 0.72})" />
       <rect x="${panelX}" y="${panelY}" width="${panelWidth}" height="${panelHeight}" rx="36" fill="#ffffff" opacity="0.05" />
-      <text x="${textX}" y="${panelY + 70}" fill="${mutedTextColor}" font-family="'DejaVu Sans'" font-size="22" font-weight="700" letter-spacing="2.5">UNA PALABRA PARA HOY</text>
+      <text x="${textX}" y="${panelY + 70}" fill="${mutedTextColor}" font-family="'DejaVu Sans'" font-size="${titleFontSize}" font-weight="700" letter-spacing="${titleLetterSpacing}">UNA PALABRA PARA HOY</text>
       <text x="${textX}" y="${panelY + 134}" fill="${textColor}" font-family="'DejaVu Sans'" font-size="${fitted.size}" font-weight="700">${messageLines}</text>
       <line x1="${textX}" y1="${panelY + 134 + messageHeight + 34}" x2="${textX + 52}" y2="${panelY + 134 + messageHeight + 34}" stroke="${mutedTextColor}" stroke-width="2.4" />
-      <text x="${textX + 72}" y="${panelY + 134 + messageHeight + 44}" fill="${textColor}" font-family="'DejaVu Sans'" font-size="28" font-weight="700">${escapeXml(reference)}</text>
+      <text x="${textX + 72}" y="${panelY + 134 + messageHeight + 44}" fill="${textColor}" font-family="'DejaVu Sans'" font-size="${referenceFontSize}" font-weight="700">${escapeXml(reference)}</text>
       <text x="${WIDTH / 2}" y="${brandY}" text-anchor="middle" fill="${useLightText ? "#fffaf0" : "#182321"}" opacity="0.96" font-family="'DejaVu Sans'" font-size="40" font-weight="700" letter-spacing="1.2">${SITE_NAME}</text>
     </svg>
   `;
