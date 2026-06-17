@@ -55,6 +55,13 @@ GET /api/random-reference
 POST /api/random-reference
 ```
 
+Y ahora tambien un endpoint que hace todo el flujo en una sola solicitud:
+
+```text
+GET /api/generate-random
+POST /api/generate-random
+```
+
 Prueba local directa del generador:
 
 ```bash
@@ -108,6 +115,24 @@ curl -X POST http://localhost:3000/api/generate \
   -H "Content-Type: application/json" \
   -d "{\"randomVerse\":true}" \
   --output imagen.png
+```
+
+### Generar una imagen completa en una sola solicitud aleatoria
+
+```bash
+curl http://localhost:3000/api/generate-random --output imagen.png
+```
+
+Tambien puedes usar `POST`:
+
+```bash
+curl -X POST http://localhost:3000/api/generate-random --output imagen.png
+```
+
+Si quieres inspeccionar el texto y la referencia antes de pedir la imagen:
+
+```bash
+curl "http://localhost:3000/api/generate-random?format=json"
 ```
 
 ### Obtener solo una URL aleatoria
