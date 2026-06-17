@@ -420,7 +420,7 @@ export default async function handler(req, res) {
     res.setHeader("Content-Type", "image/png");
     res.setHeader("Cache-Control", "no-store");
     res.setHeader("Content-Disposition", 'inline; filename="bibliabendita.png"');
-    res.status(200).send(png);
+    res.status(200).send(Buffer.from(png));
   } catch (error) {
     res.status(500).json({ error: "Could not generate image", detail: error.message });
   }
