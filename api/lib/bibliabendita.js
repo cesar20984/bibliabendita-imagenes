@@ -59,6 +59,34 @@ export function getRandomBibliabenditaReference(random = Math.random) {
   };
 }
 
+export async function getRandomAvailableBibliabenditaReference(random = Math.random, maxAttempts = 12) {
+  let lastError;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const candidate = getRandomBibliabenditaReference(random);
+
+    try {
+      const passage = await fetchBibliabenditaPassage(candidate.url);
+      if (!passage.reference || !passage.verseText) {
+        throw new Error("Bibliabendita page is missing verse content");
+      }
+
+      return {
+        ...candidate,
+        passage,
+      };
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw new Error(
+    `Could not find a published Bibliabendita page after ${maxAttempts} attempts${
+      lastError ? `: ${lastError.message}` : ""
+    }`,
+  );
+}
+
 export async function fetchBibliabenditaPassage(url) {
   const response = await fetch(url, {
     headers: {

@@ -1,4 +1,4 @@
-import { fetchBibliabenditaPassage, getRandomBibliabenditaReference } from "./lib/bibliabendita.js";
+import { getRandomAvailableBibliabenditaReference } from "./lib/bibliabendita.js";
 import { generateImageCommentary } from "./lib/commentary.js";
 import { generatePostPng } from "./generate.js";
 
@@ -48,8 +48,8 @@ export default async function handler(req, res) {
   try {
     const input = req.method === "POST" ? getBody(req) : req.query || {};
     const random = createRandomFromSeed(input.seed);
-    const reference = getRandomBibliabenditaReference(random);
-    const passage = await fetchBibliabenditaPassage(reference.url);
+    const reference = await getRandomAvailableBibliabenditaReference(random);
+    const passage = reference.passage;
     const text = await generateImageCommentary(passage);
 
     if (isJsonRequest(input)) {

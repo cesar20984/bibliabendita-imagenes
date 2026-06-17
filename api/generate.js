@@ -3,6 +3,7 @@ import { Resvg, initWasm } from "@resvg/resvg-wasm";
 import {
   buildBibliabenditaUrl,
   fetchBibliabenditaPassage,
+  getRandomAvailableBibliabenditaReference,
   getRandomBibliabenditaReference,
 } from "./lib/bibliabendita.js";
 import { generateImageCommentary } from "./lib/commentary.js";
@@ -431,7 +432,8 @@ async function resolveImageRequest(body) {
   } else if (body.book && body.chapter && body.verse) {
     sourceUrl = buildBibliabenditaUrl(body.book, body.chapter, body.verse);
   } else if (body.randomVerse || body.randomReference) {
-    sourceUrl = getRandomBibliabenditaReference().url;
+    const randomReference = await getRandomAvailableBibliabenditaReference();
+    sourceUrl = randomReference.url;
   }
 
   if (!sourceUrl) {

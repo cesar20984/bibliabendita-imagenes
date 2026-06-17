@@ -1,4 +1,4 @@
-import { getRandomBibliabenditaReference } from "./lib/bibliabendita.js";
+import { getRandomAvailableBibliabenditaReference } from "./lib/bibliabendita.js";
 
 function getBody(req) {
   if (!req.body) return {};
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
   try {
     const body = req.method === "POST" ? getBody(req) : req.query || {};
     const random = createRandomFromSeed(body.seed);
-    const reference = getRandomBibliabenditaReference(random);
+    const reference = await getRandomAvailableBibliabenditaReference(random);
 
     res.status(200).json({
       ok: true,
