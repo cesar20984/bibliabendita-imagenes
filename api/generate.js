@@ -94,11 +94,11 @@ function splitText(text, maxChars) {
 
 function fitText(text) {
   const candidates = [
-    { size: 68, maxChars: 18, maxLines: 5 },
-    { size: 60, maxChars: 22, maxLines: 6 },
-    { size: 52, maxChars: 26, maxLines: 7 },
-    { size: 46, maxChars: 31, maxLines: 8 },
-    { size: 40, maxChars: 36, maxLines: 9 },
+    { size: 58, maxChars: 17, maxLines: 6 },
+    { size: 52, maxChars: 20, maxLines: 7 },
+    { size: 46, maxChars: 24, maxLines: 8 },
+    { size: 41, maxChars: 28, maxLines: 9 },
+    { size: 37, maxChars: 31, maxLines: 10 },
   ];
 
   for (const candidate of candidates) {
@@ -106,7 +106,7 @@ function fitText(text) {
     if (lines.length <= candidate.maxLines) return { ...candidate, lines };
   }
 
-  return { size: 36, lines: splitText(text, 42).slice(0, 9) };
+  return { size: 34, lines: splitText(text, 34).slice(0, 10) };
 }
 
 function gradients(palette) {
@@ -341,16 +341,16 @@ function createSvg({ text, reference, style, seed }) {
   const mutedTextColor = useLightText ? "rgba(255,250,240,0.78)" : "rgba(24,35,33,0.72)";
   const panelRgb = useLightText ? "16,30,31" : "247,239,222";
   const fitted = fitText(text);
-  const lineHeight = fitted.size * 1.16;
+  const lineHeight = fitted.size * 1.14;
   const messageHeight = fitted.lines.length * lineHeight;
-  const panelWidth = 810;
+  const panelWidth = 820;
   const panelX = (WIDTH - panelWidth) / 2;
-  const panelHeight = Math.max(420, messageHeight + 225);
+  const panelHeight = Math.max(450, messageHeight + 240);
   const panelY = Math.min(
-    pick(random, [SAFE_TOP + 115, SAFE_TOP + 245, SAFE_TOP + 365]),
+    pick(random, [SAFE_TOP + 105, SAFE_TOP + 210, SAFE_TOP + 315]),
     SAFE_TOP + WIDTH - panelHeight - 75,
   );
-  const textX = panelX + 60;
+  const textX = panelX + 56;
   const brandY = random() > 0.5 ? SAFE_TOP + 62 : SAFE_TOP + WIDTH - 54;
   const messageLines = fitted.lines
     .map((line, index) => `<tspan x="${textX}" dy="${index === 0 ? 0 : lineHeight}">${escapeXml(line)}</tspan>`)
@@ -364,11 +364,11 @@ function createSvg({ text, reference, style, seed }) {
       <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#vignette)" />
       <rect x="${panelX}" y="${panelY}" width="${panelWidth}" height="${panelHeight}" rx="36" fill="rgba(${panelRgb},${useLightText ? 0.54 : 0.72})" />
       <rect x="${panelX}" y="${panelY}" width="${panelWidth}" height="${panelHeight}" rx="36" fill="#ffffff" opacity="0.05" />
-      <text x="${textX}" y="${panelY + 68}" fill="${mutedTextColor}" font-family="'DejaVu Sans'" font-size="20" font-weight="700" letter-spacing="3">UNA PALABRA PARA HOY</text>
-      <text x="${textX}" y="${panelY + 136}" fill="${textColor}" font-family="'DejaVu Serif'" font-size="${fitted.size}">${messageLines}</text>
-      <line x1="${textX}" y1="${panelY + 136 + messageHeight + 28}" x2="${textX + 52}" y2="${panelY + 136 + messageHeight + 28}" stroke="${mutedTextColor}" stroke-width="2" />
-      <text x="${textX + 72}" y="${panelY + 136 + messageHeight + 36}" fill="${textColor}" font-family="'DejaVu Sans'" font-size="25" font-weight="700">${escapeXml(reference)}</text>
-      <text x="${WIDTH / 2}" y="${brandY}" text-anchor="middle" fill="${useLightText ? "#fffaf0" : "#182321"}" opacity="0.9" font-family="'DejaVu Sans'" font-size="34" font-weight="700" letter-spacing="1.5">${SITE_NAME}</text>
+      <text x="${textX}" y="${panelY + 70}" fill="${mutedTextColor}" font-family="'DejaVu Sans'" font-size="22" font-weight="700" letter-spacing="2.5">UNA PALABRA PARA HOY</text>
+      <text x="${textX}" y="${panelY + 134}" fill="${textColor}" font-family="'DejaVu Sans'" font-size="${fitted.size}" font-weight="700">${messageLines}</text>
+      <line x1="${textX}" y1="${panelY + 134 + messageHeight + 34}" x2="${textX + 52}" y2="${panelY + 134 + messageHeight + 34}" stroke="${mutedTextColor}" stroke-width="2.4" />
+      <text x="${textX + 72}" y="${panelY + 134 + messageHeight + 44}" fill="${textColor}" font-family="'DejaVu Sans'" font-size="28" font-weight="700">${escapeXml(reference)}</text>
+      <text x="${WIDTH / 2}" y="${brandY}" text-anchor="middle" fill="${useLightText ? "#fffaf0" : "#182321"}" opacity="0.96" font-family="'DejaVu Sans'" font-size="40" font-weight="700" letter-spacing="1.2">${SITE_NAME}</text>
     </svg>
   `;
 }
