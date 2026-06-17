@@ -1,5 +1,11 @@
 import { readFile } from "node:fs/promises";
 import { Resvg, initWasm } from "@resvg/resvg-wasm";
+import {
+  buildBibliabenditaUrl,
+  fetchBibliabenditaPassage,
+  getRandomBibliabenditaReference,
+} from "./lib/bibliabendita.js";
+import { generateImageCommentary } from "./lib/commentary.js";
 
 const WIDTH = 1080;
 const HEIGHT = 1350;
@@ -339,7 +345,10 @@ function createSvg({ text, reference, style, seed }) {
   const panelWidth = 810;
   const panelX = (WIDTH - panelWidth) / 2;
   const panelHeight = Math.max(420, messageHeight + 225);
-  const panelY = Math.min(pick(random, [SAFE_TOP + 115, SAFE_TOP + 245, SAFE_TOP + 365]), SAFE_TOP + WIDTH - panelHeight - 75);
+  const panelY = Math.min(
+    pick(random, [SAFE_TOP + 115, SAFE_TOP + 245, SAFE_TOP + 365]),
+    SAFE_TOP + WIDTH - panelHeight - 75,
+  );
   const textX = panelX + 60;
   const brandY = random() > 0.5 ? SAFE_TOP + 62 : SAFE_TOP + WIDTH - 54;
   const messageLines = fitted.lines
@@ -365,7 +374,9 @@ function createSvg({ text, reference, style, seed }) {
 
 export async function generatePostPng(options = {}) {
   const { fontBuffers } = await ensureResvgReady();
-  const text = String(options.text || "Incluso cuando el camino no está claro, la fe nos recuerda que nunca avanzamos solos.").slice(0, 260);
+  const text = String(
+    options.text || "Incluso cuando el camino no esta claro, la fe nos recuerda que nunca avanzamos solos.",
+  ).slice(0, 260);
   const reference = String(options.reference || "Salmos 32:8").slice(0, 80);
   const seed = String(options.seed || `${Date.now()}-${Math.random()}`);
   const style = options.style ? String(options.style) : undefined;
@@ -375,14 +386,14 @@ export async function generatePostPng(options = {}) {
       mode: "width",
       value: WIDTH,
     },
-      font: {
-        fontBuffers,
-        loadSystemFonts: false,
-        defaultFontFamily: "DejaVu Sans",
-        sansSerifFamily: "DejaVu Sans",
-        serifFamily: "DejaVu Serif",
-      },
-    });
+    font: {
+      fontBuffers,
+      loadSystemFonts: false,
+      defaultFontFamily: "DejaVu Sans",
+      sansSerifFamily: "DejaVu Sans",
+      serifFamily: "DejaVu Serif",
+    },
+  });
   return resvg.render().asPng();
 }
 
@@ -398,12 +409,67 @@ function getBody(req) {
   return req.body;
 }
 
+function isJsonRequest(body) {
+  return body.format === "json" || body.debug === true || body.responseType === "json";
+}
+
+async function resolveImageRequest(body) {
+  if (body.text) {
+    return {
+      mode: "manual",
+      text: String(body.text),
+      reference: String(body.reference || "Salmos 32:8"),
+      style: body.style ? String(body.style) : undefined,
+      seed: body.seed ? String(body.seed) : undefined,
+    };
+  }
+
+  let sourceUrl = "";
+
+  if (body.sourceUrl) {
+    sourceUrl = String(body.sourceUrl).trim();
+  } else if (body.book && body.chapter && body.verse) {
+    sourceUrl = buildBibliabenditaUrl(body.book, body.chapter, body.verse);
+  } else if (body.randomVerse || body.randomReference) {
+    sourceUrl = getRandomBibliabenditaReference().url;
+  }
+
+  if (!sourceUrl) {
+    throw new Error(
+      "Missing input. Send either text, sourceUrl, book/chapter/verse, or randomVerse=true.",
+    );
+  }
+
+  const passage = await fetchBibliabenditaPassage(sourceUrl);
+  const commentary = await generateImageCommentary(passage);
+
+  return {
+    mode: "bibliabendita",
+    text: commentary,
+    reference: passage.reference || passage.title || "Biblia",
+    style: body.style ? String(body.style) : undefined,
+    seed: body.seed ? String(body.seed) : undefined,
+    source: passage,
+  };
+}
+
 export default async function handler(req, res) {
   if (req.method === "GET") {
     res.status(200).json({
       ok: true,
       endpoint: "POST /api/generate",
-      body: { text: "string", reference: "string", style: "optional", seed: "optional" },
+      body: {
+        text: "string",
+        reference: "string",
+        style: "optional",
+        seed: "optional",
+        sourceUrl: "optional",
+        book: "optional",
+        chapter: "optional",
+        verse: "optional",
+        randomVerse: "optional",
+        format: '"json" optional',
+      },
       styles: Object.keys(palettes),
     });
     return;
@@ -416,7 +482,23 @@ export default async function handler(req, res) {
   }
 
   try {
-    const png = await generatePostPng(getBody(req));
+    const body = getBody(req);
+    const imageRequest = await resolveImageRequest(body);
+
+    if (isJsonRequest(body)) {
+      res.status(200).json({
+        ok: true,
+        mode: imageRequest.mode,
+        text: imageRequest.text,
+        reference: imageRequest.reference,
+        style: imageRequest.style || "random",
+        seed: imageRequest.seed || "random",
+        source: imageRequest.source || null,
+      });
+      return;
+    }
+
+    const png = await generatePostPng(imageRequest);
     res.setHeader("Content-Type", "image/png");
     res.setHeader("Cache-Control", "no-store");
     res.setHeader("Content-Disposition", 'inline; filename="bibliabendita.png"');
