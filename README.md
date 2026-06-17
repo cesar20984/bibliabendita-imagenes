@@ -48,6 +48,13 @@ Tambien puede trabajar con contenido real de `bibliabendita.com` de tres formas:
 2. Libro, capitulo y versiculo
 3. Referencia aleatoria valida generada desde la lista de libros/capitulos/versiculos
 
+Tambien incluye un endpoint separado para pedir solo una URL aleatoria, sin generar imagen:
+
+```text
+GET /api/random-reference
+POST /api/random-reference
+```
+
 Prueba local directa del generador:
 
 ```bash
@@ -101,6 +108,34 @@ curl -X POST http://localhost:3000/api/generate \
   -H "Content-Type: application/json" \
   -d "{\"randomVerse\":true}" \
   --output imagen.png
+```
+
+### Obtener solo una URL aleatoria
+
+```bash
+curl http://localhost:3000/api/random-reference
+```
+
+Respuesta esperada:
+
+```json
+{
+  "ok": true,
+  "endpoint": "GET /api/random-reference",
+  "bookSlug": "hebreos",
+  "chapter": 7,
+  "verse": 23,
+  "url": "https://bibliabendita.com/hebreos/hebreos-7-23",
+  "sourceUrl": "https://bibliabendita.com/hebreos/hebreos-7-23"
+}
+```
+
+Tambien puedes usar `POST` y mandar una `seed` si quieres repetir la misma referencia:
+
+```bash
+curl -X POST http://localhost:3000/api/random-reference \
+  -H "Content-Type: application/json" \
+  -d "{\"seed\":\"demo-1\"}"
 ```
 
 ### Ver el comentario y los datos en JSON
